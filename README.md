@@ -6,4 +6,4 @@ This NodeJS/ExpressJS application allows you to work with `GPT4` and Google `Gem
 
 run 
 
-    npm run dev
+    docker compose up
