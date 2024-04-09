@@ -1,10 +1,13 @@
-import UserDTO from "../dtos/users/user-dto";
 import jwt from "jsonwebtoken";
+import {ObjectId} from "mongoose";
+ 
+import APIError from "../exceptions/api-error";
 
 import { Token } from "../mongoose/schemas/token";
-import {IUser, User} from "../mongoose/schemas/user";
-import APIError from "../exceptions/api-error";
-import Users from "../routes/users";
+import { TokenGeo } from "../mongoose/schemas/tokenGeo";
+import { User } from "../mongoose/schemas/user";
+import UserDTO from "../dtos/users/user-dto";
+import TokenGeoDTO from "../dtos/tokens/tokenGeo-dto";
 
 
 class TokenService {
@@ -14,30 +17,48 @@ class TokenService {
 
     async getTokens(payload: UserDTO): Promise<{accessToken: string, refreshToken: string}> {
         // generating tokens
-        const accessToken: string = jwt.sign(payload, this.JWT_ACCESS_SECRET);
+        const accessToken: string = jwt.sign(payload, 
+            this.JWT_ACCESS_SECRET, 
+            {expiresIn: process.env.JWT_ACCESS_EXPIRES as string});
         const refreshToken: string = jwt.sign(payload, this.JWT_REFRESH_SECRET);
 
         return {accessToken, refreshToken}
     }
+
     async saveToken(user: UserDTO, accessToken: string, refreshToken: string) {
         // create document in db
         const savedToken = await Token.create({user: user.id, accessToken, refreshToken});
         savedToken.save();
     }
 
-    async validateAccessToken(accessToken: string): Promise<string | jwt.JwtPayload | null> {
+    async deleteTokens(refresh: string): Promise<undefined>{
+        try {
+            const userData = await this.validateRefreshToken(refresh);
+
+            if (!userData) {
+                throw APIError.BadRequestError('invalid refresh! cannot delete tokens!');
+            }
+            await TokenGeo.deleteOne({user: userData.id});
+            await Token.deleteOne({refreshToken: refresh});
+
+        } catch (err) {
+            throw APIError.BadRequestError(`${err}`);
+        }
+    }
+
+    async validateAccessToken(accessToken: string): Promise<jwt.JwtPayload | null> {
         try {
             const userData = jwt.verify(accessToken, this.JWT_ACCESS_SECRET);
-            return userData;
+            return userData as jwt.JwtPayload;
         } catch (e) {
             return null;
         }
     }
 
-    async validateRefreshToken(refreshToken: string): Promise<string | jwt.JwtPayload | null> {
+    async validateRefreshToken(refreshToken: string): Promise<jwt.JwtPayload | null> {
         try {
             const userData = jwt.verify(refreshToken, this.JWT_REFRESH_SECRET);
-            return userData;
+            return userData as jwt.JwtPayload;
         } catch (e) {
             return null;
         }
@@ -74,9 +95,34 @@ class TokenService {
 
     }
 
-    async getAllTokens() {
-        return 'there are will be all token\'s geo\'s';
+    async getUserTokens(refresh: string): Promise<any | null> {
+        try {
+            const user = await this.validateRefreshToken(refresh);
+            if(!user) {
+                throw APIError.BadRequestError('invalid refresh!');
+            }
+
+            const geoTokens = (await TokenGeo.find({user: user.id}))
+            if (!geoTokens) {
+                throw APIError.BadRequestError('Can\'t find sessions');
+            }
+
+            return geoTokens.map(e => {
+                return new TokenGeoDTO(
+                    e._id.toString(),
+                    e.user.toString(), 
+                    e.refresh.toString(),
+                    e.userAgent,
+                    e.userIP
+                );
+            });
+            
+
+        } catch (err) {
+            return null;
+        }
     }
+
 }
 
 export default new TokenService();

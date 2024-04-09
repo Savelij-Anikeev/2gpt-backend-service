@@ -11,16 +11,12 @@ export default async (req: Request, res: Response, next: NextFunction) => {
         if (!authorizationHeader) {
             return next(APIError.UnauthorizedError('no authorization header'));
         }
-        const accessToken = authorizationHeader.split(' ')[1];
-        if (!accessToken) {
-            return next(APIError.UnauthorizedError('no access token'));
-        }
 
-        const userData = await TokenService.validateAccessToken(accessToken);
-
+        const userData = TokenService.validateRefreshToken(authorizationHeader.split(' ')[-1]);
         if (!userData) {
-            return next(APIError.UnauthorizedError('invalid access token'));
+            return next(APIError.UnauthorizedError('invalid refresh token'));
         }
+        
         next();
 
     } catch (e) {

@@ -1,12 +1,17 @@
 import { Request, Response, NextFunction } from "express-serve-static-core";
 import { validationResult } from "express-validator";
 
+import { Token } from "../mongoose/schemas/token";
+
 import UserDTO from "../dtos/users/user-dto";
 import APIError from "../exceptions/api-error";
+
 import UserService from "../services/user-service";
 import TokenService from "../services/token-service";
+import TokenGeoService from "../services/tokenGeo-service";
 
 import {compareHashedPassword} from "../utils/helpers";
+import userService from "../services/user-service";
 
 class UserController {
     // auth
@@ -30,6 +35,7 @@ class UserController {
             next(e);
         }
     }
+
     async login(req: Request, res: Response, next: NextFunction){
         try {
             // checking if user is already logged in
@@ -49,9 +55,12 @@ class UserController {
             // tokens and dto
             const userDTO = new UserDTO(user);
             const tokens = await TokenService.getTokens({...userDTO});
-            // saving token to database
-            await TokenService.saveToken(userDTO, tokens.accessToken, tokens.refreshToken);
 
+            // saving token to database and creating tokenGeoInfo
+            await TokenService.saveToken(userDTO, tokens.accessToken, tokens.refreshToken);
+            await TokenGeoService.createGeo(tokens.refreshToken, 
+                req.ip || "unknown", req.headers["user-agent"] || "unknown", user._id);
+                
             res.cookie("refreshToken", tokens.refreshToken, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 })
             res.status(201).send({ user: userDTO, access: tokens.accessToken })
         } catch (e) {
@@ -59,6 +68,7 @@ class UserController {
             next(e);
         }
     }
+
     async refreshTokens(req: Request, res: Response, next: NextFunction) {
         try {
             if (!req.headers.authorization?.split(' ')[1]) {
@@ -78,6 +88,38 @@ class UserController {
         }
     }
 
+    async getAllUserTokens(req: Request, res: Response, next: NextFunction) {
+        try {
+            const tokens = await TokenService.getUserTokens(req.cookies["refreshToken"]);
+            res.send(tokens);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    async logout(req: Request, res: Response, next: NextFunction) {
+        try {
+            TokenService.deleteTokens(req.cookies["refreshToken"]);
+            res.clearCookie("refreshToken");
+            res.status(204).send();
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    async logoutRemoteDevice(req: Request, res: Response, next: NextFunction) {
+        try {
+            // get refresh
+            const currentTokenGeo = await TokenGeoService.getOne(req.params.id);
+            const token = await Token.findOne({_id: currentTokenGeo.refresh});
+            await TokenService.deleteTokens(token?.toObject().refreshToken as string);
+
+            res.status(204).send();
+        } catch (err) {
+            next(err);
+        }
+    }
+
     // other
     async getAll(req: Request, res: Response, next: NextFunction) {
         try {
@@ -86,18 +128,20 @@ class UserController {
             const users = await UserService.getList(offset, limit);
             res.send(users);
         } catch (e) {
-            throw APIError.BadRequestError('error while getting user list');
+            next(e);
         }
     }
+    
     async getOne(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.userId as string;
             const user = await UserService.getUserById(id);
             res.send(user);
         } catch (e) {
-            throw APIError.BadRequestError('error while getting user list');
+            next(e);
         }
     }
+
 }
 
 export default new UserController();

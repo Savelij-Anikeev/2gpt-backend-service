@@ -12,6 +12,9 @@ export default (): Express => {
     const app = express();
     const API_PREFIX: string = '/api/v1/';
 
+    // making server trust to proxy
+    app.set('trust proxy', true);
+
     // middlewares
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
