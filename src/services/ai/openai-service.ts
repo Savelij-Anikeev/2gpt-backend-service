@@ -1,12 +1,12 @@
 import OpenAI from "openai";
 
 class OpenAIService {
-    openAIApi = new OpenAI({apiKey: process.env.OPENAI_API_KEY as string});
+    private openAIApi = new OpenAI({apiKey: process.env.OPENAI_API_KEY as string});
 
-    async startStream(msg: string) {
+    async startStream(msg: string, modelName: string) {
         const arr = [];
         const stream = await this.openAIApi.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: modelName,
             messages: [{ role: 'user', content: msg}],
             stream: true
         });

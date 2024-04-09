@@ -3,14 +3,16 @@ dotenv.config({ path: __dirname+'/.env' });
 
 import { Express } from "express"
 import { Request } from "express-serve-static-core";
-import {Server, WebSocket} from "ws";
+import {Server, WebSocket } from "ws";
 import mongoose from "mongoose";
 import createApp from "./createApp";
+
+import openaiWS from "./websockets/openaiWS";
+
 
 const app: Express = createApp();
 const PORT: number = 5000;
 
-import WebSocketServer from "./WebSocketServer";
 
 // database
 mongoose.connect('mongodb://db_container:27017')
@@ -24,7 +26,7 @@ const server = app.listen(PORT, (): void => {
 
 // sockets
 server.on('upgrade', (request, socket, head) => {
-    WebSocketServer.handleUpgrade(request, socket, head, (socket) => {
-        WebSocketServer.emit('connection', socket, request);
+    openaiWS.handleUpgrade(request, socket, head, (socket) => {
+        openaiWS.emit('connection', socket, request);
     })
 })

@@ -26,5 +26,11 @@ router.post('/refresh-token/', authMiddeware,
 router.get('/users', (req: Request, res: Response, next: NextFunction) => UserController.getAll(req, res, next));
 router.get('/users/:userId', (req: Request, res: Response, next: NextFunction) => UserController.getOne(req, res, next));
 
+// extra
+// endpoint for getting user's  geo by tokens
+router.get('/tokens', authMiddeware,
+    (req: Request, res: Response, next: NextFunction) => TokenService.getAllTokens()
+)
+
 
 export default router;

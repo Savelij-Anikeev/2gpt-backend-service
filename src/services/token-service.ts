@@ -73,6 +73,10 @@ class TokenService {
         }
 
     }
+
+    async getAllTokens() {
+        return 'there are will be all token\'s geo\'s';
+    }
 }
 
 export default new TokenService();
