@@ -7,7 +7,7 @@ import SMTPError from "../../exceptions/smtp-error";
 
 
 class SMTPService {
-    transporter = createTransport(smtpConfig);
+    private transporter = createTransport(smtpConfig);
 
     private getHTMLTemplate() {
         try {
@@ -20,15 +20,30 @@ class SMTPService {
     async sendMail(participants: string[], subject: string): Promise<undefined> {
         try {
             const sendConfig = {
-                from: `GPT7 <${process.env.SMTP_HOST}>`,
+                from: process.env.SMTP_HOST,
                 to: participants,
                 html: this.getHTMLTemplate(),
                 subject,
             }
-            this.transporter.sendMail(sendConfig)
+            this.transporter.sendMail(sendConfig, (err, info) => {
+                if (err) {
+                    throw SMTPError.SendError(`${err}`);
+                }
+                console.log(info);
+                
+            });
         } catch (err) {
-            SMTPError.SendError('Error while sending email', [err as Error]);
+            SMTPError.SendError(`${err}`);
         }
+    }
+    async verifyConnection() {
+        this.transporter.verify(function (error, success) {
+            if (error) {
+              throw error;
+            } else {
+              SMTPError.SendError('ok');
+            }
+          });
     }
 
 }

@@ -1,12 +1,15 @@
 import { Router } from "express";
 import { Request, Response, NextFunction } from "express-serve-static-core";
 
+// Validation
 import { UserValidationSchema } from "../utils/validationSchemas";
 import { checkSchema } from "express-validator";
 
+// Controllers
 import UserController from "../controllers/user-controller";
 
-import authMiddeware from "../middlewares/auth-middeware";
+// Middlewares
+import authMiddleware from "../middlewares/auth-middleware";
 import refreshMiddleware from "../middlewares/refresh-middleware";
 
 
@@ -21,21 +24,26 @@ router.post('/login/', checkSchema(UserValidationSchema),
 
 router.post('/refresh-token/', refreshMiddleware,
     (req: Request, res: Response, next: NextFunction) => UserController.refreshTokens(req, res, next));
-router.delete('/logout/', authMiddeware,
+router.delete('/logout/', authMiddleware,
     (req: Request, res: Response, next: NextFunction) => UserController.logout(req, res, next));
 
 // users
-router.get('/users', (req: Request, res: Response, next: NextFunction) => UserController.getAll(req, res, next));
-router.get('/users/:userId', (req: Request, res: Response, next: NextFunction) => UserController.getOne(req, res, next));
+router.get('/users', 
+    (req: Request, res: Response, next: NextFunction) => UserController.getAll(req, res, next));
+router.get('/users/:userId', 
+    (req: Request, res: Response, next: NextFunction) => UserController.getOne(req, res, next));
+router.delete('/users/:userId', 
+    (req: Request, res: Response, next: NextFunction) => UserController.deleteOne(req, res, next));
+router.patch('/users/:userId', 
+    (req: Request, res: Response, next: NextFunction) => UserController.patchOne(req, res, next));
 
 // extra
 // endpoint for getting user's  geo by tokens
-router.get('/tokens', authMiddeware,
+router.get('/tokens', authMiddleware,
     (req: Request, res: Response, next: NextFunction) => UserController.getAllUserTokens(req, res, next)
 );
-router.delete('/tokens/:id', authMiddeware,
+router.delete('/tokens/:id', authMiddleware,
     (req: Request, res: Response, next: NextFunction) => UserController.logoutRemoteDevice(req, res, next)
 );
-
 
 export default router;

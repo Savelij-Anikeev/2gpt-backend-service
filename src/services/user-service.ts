@@ -2,6 +2,7 @@ import {IUser, User} from "../mongoose/schemas/user";
 import { hashPassword, compareHashedPassword } from "../utils/helpers"
 import * as uuid from 'uuid';
 import APIError from "../exceptions/api-error";
+import UserDTO from "../dtos/users/user-dto";
 
 class UserService {
     async create(email: string, password: string): Promise<IUser> {
@@ -20,14 +21,14 @@ class UserService {
 
         return user.toObject();
     }
-    async getUserById(id: string) : Promise<IUser>{
-        const user = await User.findOne({_id: id}).exec();
+    async getUserById(_id: string) : Promise<UserDTO>{
+        const user = await User.findOne({_id}).exec();
 
         if (!user) {
             throw APIError.BadRequestError('user not found');
         }
 
-        return user.toObject();
+        return new UserDTO(user.toObject());
     }
     async getList(offset: number | undefined, limit: number | undefined): Promise<IUser[]> {
         let users: IUser[] = await User.find();
@@ -40,6 +41,17 @@ class UserService {
             return users.slice(0, limit);
         }
         return users;
+    }
+
+    async deleteUserById(_id: string): Promise<undefined> {
+        await User.deleteOne({_id});
+    }
+
+    async patchUserById(_id: string, data: any): Promise<UserDTO> {
+        await User.updateOne({_id}, {...data});
+        const user = await this.getUserById(_id);
+
+        return user;
     }
 }
 

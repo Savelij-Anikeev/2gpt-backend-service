@@ -64,18 +64,13 @@ class TokenService {
         }
     }
 
-    async refreshTokens(oldRefreshToken: string, oldAccessToken: string) {
+    async refreshTokens(oldRefreshToken: string) {
         try {
             const userDataRef = await this.validateRefreshToken(oldRefreshToken);
-            const userDataAcc = await this.validateAccessToken(oldAccessToken);
             const tokenFormDb = await Token.findOne({refreshToken: oldRefreshToken}).exec();
 
-            if (!userDataRef || !userDataAcc || !tokenFormDb) {
+            if (!userDataRef || !tokenFormDb) {
                 throw APIError.UnauthorizedError();
-            }
-
-            if (oldAccessToken !== tokenFormDb.toObject().accessToken) {
-                throw APIError.UnauthorizedError('accessToken is deactivated');
             }
 
             const user = await User.findById(tokenFormDb.user);

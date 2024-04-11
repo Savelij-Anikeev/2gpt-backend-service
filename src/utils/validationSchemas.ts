@@ -20,3 +20,46 @@ export const UserValidationSchema = {
         }
     }
 }
+
+export const AIProviderValidationSchema = {
+    name: {
+        notEmpty: {
+            errorMessage: "Name cannot be empty"
+        },
+        isString: {
+            errorMessage: "Name should be string"
+        },
+    }
+}
+
+export const AIModelValidationSchema = {
+    name: {
+        notEmpty: {
+            errorMessage: "Name cannot be empty"
+        },
+        isString: {
+            errorMessage: "Name should be string"
+        },
+    },
+    provider: {
+        notEmpty: {
+            errorMessage: "Provider cannot be empty"
+        },
+        isString: {
+            errorMessage: "Provider should be string"
+        },   
+    }
+}
+
+export const AIModelValidationSchemaPatch = {
+    name: {
+        isString: {
+            errorMessage: "Name should be string"
+        },
+    },
+    provider: {
+        isString: {
+            errorMessage: "Provider should be string"
+        },   
+    }
+}

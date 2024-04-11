@@ -2,7 +2,7 @@ import express, {Express} from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import passport from "passport";
-import router from "./routes/mainRouter";
+import router from "./routes/main-router";
 
 import ErrorMiddleware from "./middlewares/error-middleware";
 

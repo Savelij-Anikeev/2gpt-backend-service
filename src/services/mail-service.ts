@@ -1,5 +1,5 @@
 class MailService {
-    async sendActivationMail(to: string, link: string) {
+    async sendActivationMail(participants: string[], link: string) {
 
     }
 }

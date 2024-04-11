@@ -15,8 +15,18 @@ const UserSchema: Schema = new Schema({
         type: Schema.Types.String,
         required: true
     },
-    activationLink: Schema.Types.String,
-    isActivated: Schema.Types.Boolean
+    activationLink: {
+        type: Schema.Types.String,
+    },
+    isActivated: { 
+        type: Schema.Types.Boolean,
+        default: false
+    },
+    isAdmin: {
+        type: Schema.Types.Boolean,
+        default: false,
+        required: true
+    }
 
 });
 
@@ -28,4 +38,5 @@ export interface IUser {
     password: string
     activationLink: string
     isActivated: boolean
+    isAdmin: boolean
 }

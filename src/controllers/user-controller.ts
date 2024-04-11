@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express-serve-static-core";
 import { validationResult } from "express-validator";
 
+import { Types } from "mongoose";
+
 import { Token } from "../mongoose/schemas/token";
 
 import UserDTO from "../dtos/users/user-dto";
@@ -10,8 +12,9 @@ import UserService from "../services/user-service";
 import TokenService from "../services/token-service";
 import TokenGeoService from "../services/tokenGeo-service";
 
-import {compareHashedPassword} from "../utils/helpers";
+import { compareHashedPassword, getFullUrl, getPaginatedResponse } from "../utils/helpers";
 import userService from "../services/user-service";
+
 
 class UserController {
     // auth
@@ -71,11 +74,7 @@ class UserController {
 
     async refreshTokens(req: Request, res: Response, next: NextFunction) {
         try {
-            if (!req.headers.authorization?.split(' ')[1]) {
-                throw APIError.UnauthorizedError('no access token');
-            }
-            const oldAccessToken: string = req.headers.authorization.split(' ')[1];
-            const tokens = await TokenService.refreshTokens(req.cookies["refreshToken"], oldAccessToken);
+            const tokens = await TokenService.refreshTokens(req.cookies["refreshToken"]);
             if (!tokens) {
                 throw APIError.UnauthorizedError('invalid tokens 1');
             }
@@ -123,10 +122,16 @@ class UserController {
     // other
     async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const offset: number | undefined = req.query.offset ? Number(req.query.offset) : undefined;
-            const limit: number | undefined = req.query.limit ? Number(req.query.limit) : undefined;
-            const users = await UserService.getList(offset, limit);
-            res.send(users);
+            const offset: number | undefined = req.query.offset ? Number(req.query.offset) : 0;
+            const limit: number | undefined = req.query.limit ? Number(req.query.limit) : Number(process.env.PAGINATION_COUNT);
+
+            const users = (await UserService.getList(offset, limit)).map(user => (
+                new UserDTO(user)
+            ));
+            const fullUrl = getFullUrl(req);
+            const response = getPaginatedResponse(offset, limit, users, users.length, fullUrl);
+            
+            res.send(response);
         } catch (e) {
             next(e);
         }
@@ -135,7 +140,35 @@ class UserController {
     async getOne(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.userId as string;
+            if(!Types.ObjectId.isValid(id)) {
+                throw APIError.BadRequestError("invalid id");
+            }
             const user = await UserService.getUserById(id);
+            res.send(user);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async deleteOne(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.userId as string;
+            await UserService.deleteUserById(id);
+            res.end();
+        } catch (e) {
+            next(e);
+        }
+    }
+    
+    async patchOne(req: Request, res: Response, next: NextFunction) {
+        try {
+            const result = validationResult(req);
+            if (!result.isEmpty()) {
+                return res.status(400).send(result.array());
+            }
+            const id = req.params.userId as string;
+            const user = await UserService.patchUserById(id, req.body);
+
             res.send(user);
         } catch (e) {
             next(e);
