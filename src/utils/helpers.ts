@@ -1,6 +1,12 @@
 import bcryptjs from "bcryptjs";
 import url from "url";
+
 import { Request } from "express-serve-static-core";
+
+import mongoose, { Types } from "mongoose";
+
+import APIError from "../exceptions/api-error";
+
 
 const saltRounds: number = 10;
 
@@ -41,4 +47,21 @@ export const getPaginatedResponse = (offset: number, limit: number, data: any, d
     }
 
     return { next: nextPage, prev: prevPage, result: data }
+}
+
+export const isValidObjectID = (id: string): boolean => {
+    if (!Types.ObjectId.isValid(id)) {
+        throw APIError.BadRequestError('invalid pk, it should be in `ObjectID` format.');
+    }
+    return true;
+}
+
+export const isDocumentExists = (
+    modelName: string, 
+    model: mongoose.Document | null, 
+    id: string | Types.ObjectId): boolean => {
+    if (!model) {
+        throw APIError.BadRequestError(`'${modelName}' with id '${id}' was not found.`);
+    }
+    return true;
 }

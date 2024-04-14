@@ -43,7 +43,7 @@ class AIModelController {
     }
     async patch(req: Request, res: Response, next: NextFunction) {
         try {
-            const aimodel = await AIModelService.patchById(req.params.id);
+            const aimodel = await AIModelService.patchById(req.params.id, req.body);
             res.send(aimodel);
         } catch (err) {
             next(err);

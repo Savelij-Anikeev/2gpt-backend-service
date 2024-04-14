@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
 
 const schema = new Schema({
     name: {
@@ -10,5 +10,6 @@ const schema = new Schema({
 export const AIProvider = model('AIProvider', schema);
 
 export interface IAIProvider {
+    _id: Types.ObjectId
     name: string
 }

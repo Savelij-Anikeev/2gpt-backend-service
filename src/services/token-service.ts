@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
-import {ObjectId} from "mongoose";
+
+import { Response } from "express-serve-static-core";
  
 import APIError from "../exceptions/api-error";
 
@@ -31,7 +32,7 @@ class TokenService {
         savedToken.save();
     }
 
-    async deleteTokens(refresh: string): Promise<undefined>{
+    async deleteTokens(refresh: string, clientRefresh?: string, response?: Response): Promise<undefined>{
         try {
             const userData = await this.validateRefreshToken(refresh);
 
@@ -40,6 +41,12 @@ class TokenService {
             }
             await TokenGeo.deleteOne({user: userData.id});
             await Token.deleteOne({refreshToken: refresh});
+
+            // if user logging out from his device by deleting HIS DEVICE token
+            // frokm token list
+            if (refresh === clientRefresh) {
+                response?.clearCookie("refreshToken");
+            }
 
         } catch (err) {
             throw APIError.BadRequestError(`${err}`);

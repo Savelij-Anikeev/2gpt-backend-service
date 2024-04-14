@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 import { AIProvider } from "./aiProvider";
 
 const schema = new Schema({
@@ -15,7 +15,7 @@ const schema = new Schema({
 export const AIModel = model("AIModel", schema);
 
 export interface IAIModel {
-    _id: Schema.Types.ObjectId,
-    provider: Schema.Types.ObjectId,
+    _id: Types.ObjectId,
+    provider: Types.ObjectId,
     name: string
 }

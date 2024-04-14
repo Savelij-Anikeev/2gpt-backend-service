@@ -1,10 +1,10 @@
-import { Types } from "mongoose";
+import { Types, Schema } from "mongoose";
 import { IAIModel } from "../../mongoose/schemas/aiModel";
 
 export default class AIModelDTO {
-    id;
-    name;
-    provider;
+    id: Types.ObjectId;
+    name: string;
+    provider: Types.ObjectId;
 
     constructor(model: IAIModel){
         this.id = model._id;

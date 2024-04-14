@@ -90,6 +90,9 @@ class UserController {
     async getAllUserTokens(req: Request, res: Response, next: NextFunction) {
         try {
             const tokens = await TokenService.getUserTokens(req.cookies["refreshToken"]);
+            if (!tokens) {
+                throw APIError.UnauthorizedError('Invalid refresh token!');
+            }
             res.send(tokens);
         } catch (err) {
             next(err);
@@ -111,7 +114,8 @@ class UserController {
             // get refresh
             const currentTokenGeo = await TokenGeoService.getOne(req.params.id);
             const token = await Token.findOne({_id: currentTokenGeo.refresh});
-            await TokenService.deleteTokens(token?.toObject().refreshToken as string);
+            const clientRefresh = req.cookies['refreshToken'];
+            await TokenService.deleteTokens(token?.toObject().refreshToken as string, clientRefresh, res);
 
             res.status(204).send();
         } catch (err) {
