@@ -63,3 +63,30 @@ export const AIModelValidationSchemaPatch = {
         },   
     }
 }
+
+export const UserAIModelValidationSchema = {
+    user: {
+        isString: {
+            errorMessage: "User should be string value"
+        },
+        notEmpty: {
+            errorMessage: "User cannot be empty"
+        },
+    },
+    model: {
+        isString: {
+            errorMessage: "Model should be string value"
+        },
+        notEmpty: {
+            errorMessage: "Model cannot be empty"
+        },
+    },
+    context: {
+        isString: {
+            errorMessage: "Context should be JSON"
+        },
+        notEmpty: {
+            errorMessage: "Context cannot be empty"
+        },
+    },
+} 

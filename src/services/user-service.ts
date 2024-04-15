@@ -1,8 +1,9 @@
 import {IUser, User} from "../mongoose/schemas/user";
-import { hashPassword, compareHashedPassword } from "../utils/helpers"
+import { hashPassword } from "../utils/helpers"
 import * as uuid from 'uuid';
 import APIError from "../exceptions/api-error";
 import UserDTO from "../dtos/users/user-dto";
+import { isValidObjectID, isDocumentExists } from "../utils/helpers";
 
 class UserService {
     async create(email: string, password: string): Promise<IUser> {
@@ -12,8 +13,10 @@ class UserService {
 
             return user.toObject();
     }
+    
     async getUser(email: string, password: string): Promise<IUser> {
         const user = await User.findOne({email}).exec();
+        isDocumentExists("User", user, email);
 
         if (!user) {
             throw APIError.BadRequestError('user not found');
@@ -21,8 +24,11 @@ class UserService {
 
         return user.toObject();
     }
+
     async getUserById(_id: string) : Promise<UserDTO>{
+        isValidObjectID(_id);
         const user = await User.findOne({_id}).exec();
+        isDocumentExists("User", user, _id);
 
         if (!user) {
             throw APIError.BadRequestError('user not found');
@@ -30,6 +36,7 @@ class UserService {
 
         return new UserDTO(user.toObject());
     }
+
     async getList(offset: number | undefined, limit: number | undefined): Promise<IUser[]> {
         let users: IUser[] = await User.find();
 
@@ -48,6 +55,7 @@ class UserService {
     }
 
     async patchUserById(_id: string, data: any): Promise<UserDTO> {
+        isValidObjectID(_id);
         await User.updateOne({_id}, {...data});
         const user = await this.getUserById(_id);
 

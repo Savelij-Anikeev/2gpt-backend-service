@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 
 import { User } from "./user";
 import { AIModel } from "./aiModel";
@@ -20,5 +20,8 @@ const schema = new Schema({
 export const UserAIModel = model('UserAIModel', schema);
 
 export interface IUserAIModel {
-    name: string
+    _id: Types.ObjectId
+    user: Types.ObjectId
+    model: Types.ObjectId
+    context: JSON
 }
